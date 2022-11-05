@@ -28,13 +28,15 @@ int main(int argc, char **argv, char **env) {
   // initialize simulation input 
   top->clk = 1;
   top->rst = 0;
-  top->wr = 1;
-  top->rd = 1;
+  top->wr_en = 1;
+  top->rd_en = 1;
+  top->en = 1;
   top->offset = 64;
   
   // intialize variables for analogue output
   vbdInitMicIn(RAM_SZ);
 
+  try{
   // run simulation for MAX_SIM_CYC clock cycles
   for (simcyc=0; simcyc<MAX_SIM_CYC; simcyc++) {
     // dump variables into VCD file and toggle clock
@@ -43,17 +45,20 @@ int main(int argc, char **argv, char **env) {
       top->clk = !top->clk;
       top->eval ();
     }
-    top->mic_signal = vbdMicValue();
+    top->din = vbdMicValue();
     top->offset = abs(vbdValue());     // adjust delay by changing incr
 
     // plot RAM input/output, send sample to DAC buffer, and print cycle count
-    vbdPlot(int (top->mic_signal), 0, 255);
-    vbdPlot(int (top->delayed_signal), 0, 255);
+    vbdPlot(int (top->din), 0, 255);
+   // vbdPlot(int (top->dout), 0, 255);
     vbdCycle(simcyc);
 
     // either simulation finished, or 'q' is pressed
     if ((Verilated::gotFinish()) || (vbdGetkey()=='q')) 
       exit(0);
+  }
+  } catch(...) {
+    
   }
 
   vbdClose();     // ++++
